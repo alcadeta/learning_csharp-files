@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace FileSystem
@@ -12,21 +13,23 @@ namespace FileSystem
             DeleteTemp();
         }
 
-        private static readonly string[] _Folders =
+        // Folders
+        private enum FolderName { Workspace, Archive, Temp, Data }
+        private static readonly Dictionary<FolderName, string> _Folders = new()
         {
-            @"Workspace/",
-            @"Workspace/Archive/",
-            @"Workspace/Temp/",
-            @"Workspace/Temp/Data/"
+            {FolderName.Workspace, @"Workspace/"},
+            {FolderName.Archive, @"Workspace/Archive/"},
+            {FolderName.Temp, @"Workspace/Temp/"},
+            {FolderName.Data, @"Workspace/Temp/Data/"},
         };
 
         /// Create directories the paths of which are specified in _Folders
         private static void CreateDirectory()
         {
-            var total = _Folders.Length;
+            var total = _Folders.Count;
             for (var i = 0; i < total; i++)
             {
-                var dirName = _Folders[i];
+                var dirName = _Folders[(FolderName) i];
 
                 if (Directory.Exists(dirName))
                 {
@@ -43,7 +46,7 @@ namespace FileSystem
         /// Delete the `Workspace/Temp` folder recursively
         private static void DeleteTemp()
         {
-            var tempDir = _Folders[2];
+            var tempDir = _Folders[FolderName.Temp];
             if (Directory.Exists(tempDir)) // Determine whether the folder exists
                 Directory.Delete(tempDir, true); // Delete recursively if it does
         }
@@ -51,10 +54,11 @@ namespace FileSystem
         /// Move the data directory into archive
         private static void MoveDataIntoArchive()
         {
-            var dataDir = _Folders[3];
+            var dataDir = _Folders[FolderName.Data];
             if (Directory.Exists(dataDir))
             {
-                var archiveFolder = $"{_Folders[1]}Data_{DateTime.Now.ToString("yyyyMMddHHmmss")}";
+                var archiveFolder =
+                    $"{_Folders[FolderName.Archive]}Data_{DateTime.Now.ToString("yyyyMMddHHmmss")}";
                 Directory.Move(dataDir, archiveFolder);
             }
         }
