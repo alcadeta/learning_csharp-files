@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace FileSystem
 {
@@ -8,14 +9,16 @@ namespace FileSystem
     {
         private static void Main(string[] args)
         {
+            CreateConfig();
             CreateDirectory();
             CreateFile();
             MoveDataIntoArchive();
             DeleteTemp();
         }
 
-        // Folders
+        // Folder paths
         private enum FolderName { Workspace, Archive, Temp, SavedData }
+        private static readonly string _ConfigFile = "Config.txt";
         private static readonly Dictionary<FolderName, string> _Folders = new()
         {
             {FolderName.Workspace, @"Workspace/"},
@@ -68,6 +71,7 @@ namespace FileSystem
         private static void CreateFile()
         {
             var path = _Folders[FolderName.SavedData] + "TestFile.txt";
+
             File.WriteAllText(path, "Hello world!");
 
             var fileInfo = new FileInfo(path);
@@ -77,6 +81,13 @@ namespace FileSystem
 
             Console.WriteLine($"Created the file '{name}' with the extension of " +
                               $"'{extension}' and the size of {size} bytes.");
+        }
+
+        // Create a config file that contains all folder names, one per line
+        private static void CreateConfig()
+        {
+            if (!File.Exists(_ConfigFile))
+                File.WriteAllLines(_ConfigFile, _Folders.Values.ToArray());
         }
     }
 }
