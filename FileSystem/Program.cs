@@ -1,30 +1,31 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
 
 namespace FileSystem
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             CreateDirectory();
-            Console.Read();
+            DeleteTemp();
         }
+
+        private static readonly string[] _Folders =
+        {
+            @"Workspace/",
+            @"Workspace/Archive/",
+            @"Workspace/Temp/",
+            @"Workspace/Temp/Data"
+        };
+
 
         private static void CreateDirectory()
         {
-            var folders = new []
-            {
-                @"Workspace/",
-                @"Workspace/Archive/",
-                @"Workspace/Temp/"
-            };
-
-            var total = folders.Length;
+            var total = _Folders.Length;
             for (var i = 0; i < total; i++)
             {
-                var dirName = folders[i];
+                var dirName = _Folders[i];
 
                 if (Directory.Exists(dirName))
                 {
@@ -36,6 +37,13 @@ namespace FileSystem
                     Console.WriteLine($"Directory '{dirName}' is created.");
                 }
             }
+        }
+
+        private static void DeleteTemp()
+        {
+            var tempDir = _Folders[2];
+            if (Directory.Exists(tempDir)) // Determine whether the folder exists
+                Directory.Delete(tempDir, true); // Delete if it does
         }
     }
 }
