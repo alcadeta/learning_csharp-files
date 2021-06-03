@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace FileSystem
 {
@@ -13,14 +14,27 @@ namespace FileSystem
 
         private static void CreateDirectory()
         {
-            var dirName = "TestFolder";
-
-            if (Directory.Exists(dirName))
-                Console.WriteLine($"Directory '{dirName}' already exists.");
-            else
+            var folders = new []
             {
-                Directory.CreateDirectory(dirName);
-                Console.WriteLine($"Directory '{dirName}' is created.");
+                @"Workspace/",
+                @"Workspace/Archive/",
+                @"Workspace/Temp/"
+            };
+
+            var total = folders.Length;
+            for (var i = 0; i < total; i++)
+            {
+                var dirName = folders[i];
+
+                if (Directory.Exists(dirName))
+                {
+                    Console.WriteLine($"Directory '{dirName}' already exists.");
+                }
+                else
+                {
+                    Directory.CreateDirectory(dirName);
+                    Console.WriteLine($"Directory '{dirName}' is created.");
+                }
             }
         }
     }
