@@ -9,18 +9,19 @@ namespace FileSystem
         private static void Main(string[] args)
         {
             CreateDirectory();
+            CreateFile();
             MoveDataIntoArchive();
             DeleteTemp();
         }
 
         // Folders
-        private enum FolderName { Workspace, Archive, Temp, Data }
+        private enum FolderName { Workspace, Archive, Temp, SavedData }
         private static readonly Dictionary<FolderName, string> _Folders = new()
         {
             {FolderName.Workspace, @"Workspace/"},
             {FolderName.Archive, @"Workspace/Archive/"},
             {FolderName.Temp, @"Workspace/Temp/"},
-            {FolderName.Data, @"Workspace/Temp/Data/"},
+            {FolderName.SavedData, @"Workspace/Temp/Data/"},
         };
 
         /// Create directories the paths of which are specified in _Folders
@@ -51,16 +52,31 @@ namespace FileSystem
                 Directory.Delete(tempDir, true); // Delete recursively if it does
         }
 
-        /// Move the data directory into archive
+        /// Move the SavedData directory into archive
         private static void MoveDataIntoArchive()
         {
-            var dataDir = _Folders[FolderName.Data];
+            var dataDir = _Folders[FolderName.SavedData];
             if (Directory.Exists(dataDir))
             {
-                var archiveFolder =
-                    $"{_Folders[FolderName.Archive]}Data_{DateTime.Now.ToString("yyyyMMddHHmmss")}";
+                var archiveFolder = $"{_Folders[FolderName.Archive]}SavedData_" +
+                                    $"{DateTime.Now:yyyyMMddHHmmss}";
                 Directory.Move(dataDir, archiveFolder);
             }
+        }
+
+        /// Create a new file in SavedData, and write some string to it
+        private static void CreateFile()
+        {
+            var path = _Folders[FolderName.SavedData] + "TestFile.txt";
+            File.WriteAllText(path, "Hello world!");
+
+            var fileInfo = new FileInfo(path);
+            var name = Path.GetFileNameWithoutExtension(fileInfo.FullName);
+            var extension = fileInfo.Extension;
+            var size = fileInfo.Length;
+
+            Console.WriteLine($"Created the file '{name}' with the extension of " +
+                              $"'{extension}' and the size of {size} bytes.");
         }
     }
 }
