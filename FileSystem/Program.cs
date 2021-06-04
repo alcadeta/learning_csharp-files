@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace FileSystem
 {
@@ -18,12 +16,14 @@ namespace FileSystem
             DeleteTemp();
         }
 
+        private static readonly FileSystem FileSystem = new();
+
         /// Config path
         private static string ConfigFile => $"{GetUserDataFolder()}Config.txt";
 
         /// Folder names
         private enum FolderName { Workspace, Archive, Temp, SavedData }
-        private static string[] _Folders =
+        private static string[] _folders =
         {
             "Workspace/",
             "Workspace/Archive/",
@@ -33,23 +33,21 @@ namespace FileSystem
 
         /// Map `FolderName` enum value to folder path.
         private static string GetFolderByName(FolderName folderName) =>
-            GetUserDataFolder() + _Folders[(int) folderName];
+            GetUserDataFolder() + _folders[(int) folderName];
 
         /// Create directories the paths of which are specified in _Folders
         private static void CreateDirectory()
         {
-            var total = _Folders.Length;
+            var total = _folders.Length;
             for (var i = 0; i < total; i++)
             {
                 var dirName = GetFolderByName((FolderName) i);
 
-                if (Directory.Exists(dirName))
-                {
+                if (FileSystem.DirectoryExists(dirName))
                     Console.WriteLine($"Directory '{dirName}' already exists.");
-                }
                 else
                 {
-                    Directory.CreateDirectory(dirName);
+                    FileSystem.CreateDirectory(dirName);
                     Console.WriteLine($"Directory '{dirName}' is created.");
                 }
             }
@@ -59,8 +57,8 @@ namespace FileSystem
         private static void DeleteTemp()
         {
             var tempDir = GetFolderByName(FolderName.Temp);
-            if (Directory.Exists(tempDir)) // Determine whether the folder exists
-                Directory.Delete(tempDir, true); // Delete recursively if it does
+            if (FileSystem.DirectoryExists(tempDir)) // Determine whether the folder exists
+                FileSystem.DeleteDirectory(tempDir); // Delete recursively if it does
         }
 
         /// Move the SavedData directory content into archive
@@ -68,13 +66,13 @@ namespace FileSystem
         {
             var dataDir = GetFolderByName(FolderName.SavedData);
 
-            if (!Directory.Exists(dataDir)) return;
+            if (!FileSystem.DirectoryExists(dataDir)) return;
 
             var archivedDataDir =
                 GetFolderByName(FolderName.Archive)
                 + $"{Path.GetFileName(dataDir.TrimEnd(Path.DirectorySeparatorChar))}"
                 + $"_{DateTime.Now:yyyyMMddHHmmss}";
-            Directory.Move(dataDir, archivedDataDir);
+            FileSystem.MoveDirectory(dataDir, archivedDataDir);
         }
 
         /// Create a new file in SavedData, and write some string to it
@@ -97,7 +95,7 @@ namespace FileSystem
         private static void CreateConfig()
         {
             if (!File.Exists(ConfigFile))
-                File.WriteAllLines(ConfigFile, _Folders);
+                File.WriteAllLines(ConfigFile, _folders);
         }
 
         /// Read the config file and overwrite folders array with each line
@@ -108,9 +106,9 @@ namespace FileSystem
 
             // Account for there being more or less lines in the config than
             // there are elements in the folders array.
-            Array.Resize(ref _Folders, total);
+            Array.Resize(ref _folders, total);
 
-            for (var i = 0; i < total; i++) _Folders[i] = lines[i];
+            for (var i = 0; i < total; i++) _folders[i] = lines[i];
         }
 
         private static void ArchiveConfig()
@@ -140,7 +138,7 @@ namespace FileSystem
             var dir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             dir += "/FileSystemTest/";
 
-            if (!Directory.Exists(dir))
+            if (!FileSystem.DirectoryExists(dir))
                 Directory.CreateDirectory(dir);
 
             return dir;
