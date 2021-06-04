@@ -10,30 +10,33 @@ namespace FileSystem
         private static void Main(string[] args)
         {
             CreateConfig();
+            ReadConfig();
             CreateDirectory();
             CreateFile();
             MoveDataIntoArchive();
             DeleteTemp();
         }
 
+        /// Config path
+        private const string CONFIG_FILE = "Config.txt";
+
         // Folder paths
         private enum FolderName { Workspace, Archive, Temp, SavedData }
-        private static readonly string _ConfigFile = "Config.txt";
-        private static readonly Dictionary<FolderName, string> _Folders = new()
+        private static string[] _folders =
         {
-            {FolderName.Workspace, @"Workspace/"},
-            {FolderName.Archive, @"Workspace/Archive/"},
-            {FolderName.Temp, @"Workspace/Temp/"},
-            {FolderName.SavedData, @"Workspace/Temp/Data/"},
+            @"Workspace",
+            @"Workspace/Archive",
+            @"Workspace/Temp",
+            @"Workspace/Temp/SavedData"
         };
 
         /// Create directories the paths of which are specified in _Folders
         private static void CreateDirectory()
         {
-            var total = _Folders.Count;
+            var total = _folders.Length;
             for (var i = 0; i < total; i++)
             {
-                var dirName = _Folders[(FolderName) i];
+                var dirName = _folders[i];
 
                 if (Directory.Exists(dirName))
                 {
@@ -50,7 +53,7 @@ namespace FileSystem
         /// Delete the `Workspace/Temp` folder recursively
         private static void DeleteTemp()
         {
-            var tempDir = _Folders[FolderName.Temp];
+            var tempDir = _folders[(int) FolderName.Temp];
             if (Directory.Exists(tempDir)) // Determine whether the folder exists
                 Directory.Delete(tempDir, true); // Delete recursively if it does
         }
@@ -58,19 +61,17 @@ namespace FileSystem
         /// Move the SavedData directory into archive
         private static void MoveDataIntoArchive()
         {
-            var dataDir = _Folders[FolderName.SavedData];
+            var dataDir = _folders[(int) FolderName.SavedData];
             if (Directory.Exists(dataDir))
-            {
-                var archiveFolder = $"{_Folders[FolderName.Archive]}SavedData_" +
-                                    $"{DateTime.Now:yyyyMMddHHmmss}";
-                Directory.Move(dataDir, archiveFolder);
-            }
+                Directory.Move(dataDir, _folders[(int) FolderName.Archive] +
+                                        $"/{Path.GetFileName(dataDir)}" +
+                                        $"_{DateTime.Now:yyyyMMddHHmmss}");
         }
 
         /// Create a new file in SavedData, and write some string to it
         private static void CreateFile()
         {
-            var path = _Folders[FolderName.SavedData] + "TestFile.txt";
+            var path = $"{_folders[(int) FolderName.SavedData]}/TestFile.txt";
 
             File.WriteAllText(path, "Hello world!");
 
@@ -83,11 +84,28 @@ namespace FileSystem
                               $"'{extension}' and the size of {size} bytes.");
         }
 
-        // Create a config file that contains all folder names, one per line
+        /// Create a config file that contains all folder names, one per line
         private static void CreateConfig()
         {
-            if (!File.Exists(_ConfigFile))
-                File.WriteAllLines(_ConfigFile, _Folders.Values.ToArray());
+            if (!File.Exists(CONFIG_FILE))
+                File.WriteAllLines(CONFIG_FILE, _folders);
+        }
+
+        private static void ReadConfig()
+        {
+            var lines = File.ReadAllLines(CONFIG_FILE);
+            var total = lines.Length;
+
+            // Account for there being more or less lines in the config than
+            // there are elements in the folders array.
+            Array.Resize(ref _folders, total);
+
+            for (var i = 0; i < total; i++)
+            {
+                var path = lines[i];
+                Console.WriteLine($"Setting path — {path}");
+                _folders[i] = path;
+            }
         }
     }
 }
