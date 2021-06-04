@@ -19,24 +19,26 @@ namespace FileSystem
         }
 
         /// Config path
-        private const string CONFIG_FILE = "Config.txt";
+        private static string ConfigFile => $"{GetUserDataFolder()}Config.txt";
 
         /// Folder names
         private enum FolderName { Workspace, Archive, Temp, SavedData }
-        private static string[] _folders =
+        private static string[] _Folders =
         {
-            @"Workspace/",
-            @"Workspace/Archive/",
-            @"Workspace/Temp/",
-            @"Workspace/Temp/SavedData/"
+            "Workspace/",
+            "Workspace/Archive/",
+            "Workspace/Temp/",
+            "Workspace/Temp/SavedData/"
         };
+
+        /// Map `FolderName` enum value to folder path.
         private static string GetFolderByName(FolderName folderName) =>
-            _folders[(int) folderName];
+            GetUserDataFolder() + _Folders[(int) folderName];
 
         /// Create directories the paths of which are specified in _Folders
         private static void CreateDirectory()
         {
-            var total = _folders.Length;
+            var total = _Folders.Length;
             for (var i = 0; i < total; i++)
             {
                 var dirName = GetFolderByName((FolderName) i);
@@ -44,7 +46,6 @@ namespace FileSystem
                 if (Directory.Exists(dirName))
                 {
                     Console.WriteLine($"Directory '{dirName}' already exists.");
-
                 }
                 else
                 {
@@ -62,16 +63,17 @@ namespace FileSystem
                 Directory.Delete(tempDir, true); // Delete recursively if it does
         }
 
-        /// Move the SavedData directory into archive
+        /// Move the SavedData directory content into archive
         private static void MoveDataIntoArchive()
         {
             var dataDir = GetFolderByName(FolderName.SavedData);
 
             if (!Directory.Exists(dataDir)) return;
 
-            var archivedDataDir = GetFolderByName(FolderName.Archive) +
-                                  $"{Path.GetFileName(dataDir)}" +
-                                  $"_{DateTime.Now:yyyyMMddHHmmss}";
+            var archivedDataDir =
+                GetFolderByName(FolderName.Archive)
+                + $"{Path.GetFileName(dataDir.TrimEnd(Path.DirectorySeparatorChar))}"
+                + $"_{DateTime.Now:yyyyMMddHHmmss}";
             Directory.Move(dataDir, archivedDataDir);
         }
 
@@ -94,26 +96,26 @@ namespace FileSystem
         /// Create a config file that contains all folder names, one per line
         private static void CreateConfig()
         {
-            if (!File.Exists(CONFIG_FILE))
-                File.WriteAllLines(CONFIG_FILE, _folders);
+            if (!File.Exists(ConfigFile))
+                File.WriteAllLines(ConfigFile, _Folders);
         }
 
         /// Read the config file and overwrite folders array with each line
         private static void ReadConfig()
         {
-            var lines = File.ReadAllLines(CONFIG_FILE);
+            var lines = File.ReadAllLines(ConfigFile);
             var total = lines.Length;
 
             // Account for there being more or less lines in the config than
             // there are elements in the folders array.
-            Array.Resize(ref _folders, total);
+            Array.Resize(ref _Folders, total);
 
-            for (var i = 0; i < total; i++) _folders[i] = lines[i];
+            for (var i = 0; i < total; i++) _Folders[i] = lines[i];
         }
 
         private static void ArchiveConfig()
         {
-            var configPath = CONFIG_FILE;
+            var configPath = ConfigFile;
             var configName = Path.GetFileName(configPath);
             var tempPath = $"{GetFolderByName(FolderName.Temp)}{configName}";
             var newPath = $"{GetFolderByName(FolderName.SavedData)}{configName}";
@@ -130,6 +132,18 @@ namespace FileSystem
 
             File.WriteAllText(tempPath, configString);
             File.Move(tempPath, newPath);
+        }
+
+        // Get the `ApplicationData` special folder path for the user
+        private static string GetUserDataFolder()
+        {
+            var dir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            dir += "/FileSystemTest/";
+
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            return dir;
         }
     }
 }
